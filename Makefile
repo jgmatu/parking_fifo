@@ -2,55 +2,48 @@
 CXX := g++
 CC := gcc
 
-CXXFLAGS := -O2 -pthread -fPIC
-DBGFLAGS := -g
+CXXFLAGS := -fPIC -Wall -O2 -g #-Wextra 
 CCOBJFLAGS := $(CXXFLAGS) -c
+LIBFLAGS := -pthread
+INCLUDE := -I./include
+
 
 # path macros
 BIN_PATH := bin
 OBJ_PATH := obj
 SRC_PATH := src
 LIB_PATH := lib
-DBG_PATH := debug
 
 # compile macros
 TARGET_NAME := parking
 
 TARGET := $(BIN_PATH)/$(TARGET_NAME)
-TARGET_DEBUG := $(DBG_PATH)/$(TARGET_NAME)
 
 # src files & obj files
 SRC := $(foreach x, $(SRC_PATH), $(wildcard $(addprefix $(x)/*,.c*)))
 OBJ := $(addprefix $(OBJ_PATH)/, $(addsuffix .o, $(notdir $(basename $(SRC)))))
-OBJ_DEBUG := $(addprefix $(DBG_PATH)/, $(addsuffix .o, $(notdir $(basename $(SRC)))))
 
 # clean files list
-DISTCLEAN_LIST := $(OBJ) $(OBJ_DEBUG)
-CLEAN_LIST := $(TARGET) $(TARGET_DEBUG)  $(DISTCLEAN_LIST)
+DISTCLEAN_LIST := $(OBJ)
+CLEAN_LIST := $(TARGET) $(DISTCLEAN_LIST)
 
 # default rule
 default: makedir all
 
 # non-phony targets
 $(TARGET): $(OBJ)
-	$(CC) $(CXXFLAGS) -o $@ $(OBJ)
+	$(CC) $(CXXFLAGS) $(LIBFLAGS) -o $@ $(OBJ)
 
 $(OBJ_PATH)/%.o: $(SRC_PATH)/%.c*
-	$(CC) $(CCOBJFLAGS) -o $@ $<
-
-$(DBG_PATH)/%.o: $(SRC_PATH)/%.c*
-	$(CC) $(CCOBJFLAGS) $(DBGFLAGS) -o $@ $<
-
-$(TARGET_DEBUG): $(OBJ_DEBUG)
-	$(CC) $(CXXFLAGS) $(DBGFLAGS) $(OBJ_DEBUG) -o $@
+	$(CC) $(CCOBJFLAGS) $(INCLUDE) -o $@ $< 
 
 # phony rules
 .PHONY: makedir
 makedir:
-	@mkdir -p $(BIN_PATH) $(OBJ_PATH) $(DBG_PATH)
+	@mkdir -p $(BIN_PATH) $(OBJ_PATH)
 
 .PHONY: all
-all: $(TARGET)
+all: $(TARGET_LIB) $(TARGET)
 
 .PHONY: debug
 debug: $(TARGET_DEBUG)
