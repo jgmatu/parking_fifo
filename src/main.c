@@ -13,11 +13,7 @@ static parking_t g_parking;
 
 pthread_barrier_t barrier;
 
-// Problema: Me voy del parking, aviso de sitio libre, no soy el primero me duermo.
-// El primero no encontro sitio se espera.
-// Me quedo sin signals, por que no despierto al primero de la lista o no encontro sitio.
-
-// Solucion despertar siempre al primero de la lista...
+// TODO: FIFO Queue control threads
 void * control(void * arg)
 {
     return NULL;
