@@ -15,7 +15,9 @@ void print_fifo()
 
     nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%s: (%ld): ", "Queue", g_fifo.fifo.size);
     while (node) {
-        nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%d,", node->vehicle->id);
+        nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%d", node->vehicle->id);
+        if (node->next)
+            nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%s", ",");
         node = node->next;
     }
     if (g_fifo.fifo.first)
