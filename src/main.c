@@ -7,7 +7,7 @@
 #include <err.h>
 #include <stdint.h>
 
-#include <fifo.h>
+#include <queue.h>
 
 static parking_t g_parking;
 
@@ -131,7 +131,7 @@ void * task(void *arg)
         print_parking();
         pthread_mutex_unlock(&g_parking.mtx);
 
-        sleep(rand() % 10 + 10);
+        sleep(rand() % 5);
 
         pthread_mutex_lock(&g_parking.mtx);
         exit_parking(&vehicle);
@@ -157,6 +157,7 @@ int main(int argc, char **argv)
 
     pthread_mutex_init(&g_parking.mtx, NULL);
     pthread_cond_init(&g_parking.cond, NULL);
+
     pthread_barrier_init(&barrier, NULL, NUM_VEHICLES);
 
     for (uint8_t i = 0; i < MAX_SLOTS; ++i) {
