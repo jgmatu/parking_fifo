@@ -30,7 +30,7 @@ void push_queue(vehicle_t *vehicle)
 
     while (*ptr_node) ptr_node = &(*ptr_node)->next;
 
-    if ((*ptr_node = (node_t * ) calloc(1, sizeof(node_t))) == NULL) {
+    if ((*ptr_node = (node_t *) calloc(1, sizeof(node_t))) == NULL) {
         err(1, "Error allocating node memory %s", strerror(errno));
     }
     (*ptr_node)->vehicle = vehicle;

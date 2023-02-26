@@ -8,10 +8,12 @@
 #include <stdint.h>
 
 #include <queue.h>
-
-static parking_t g_parking;
+#include <parking.h>
 
 pthread_barrier_t barrier;
+
+pthread_mutex_t mtx;
+pthread_cond_t cond;
 
 // TODO: FIFO Queue control threads
 #if 0
@@ -31,69 +33,6 @@ static void entry_queue(vehicle_t *vehicle)
 {
     push_queue(vehicle);
     print_queue();
-}
-
-static void print_parking()
-{
-    char buffer[1 * 1024] = { 0 };
-    int16_t nwrite = 0;
-
-    for (uint16_t i = 0; i < MAX_SLOTS; ++i) {
-        nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "[%d]", g_parking.slots[i]);
-    }
-    nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, " - > free slots: %d", g_parking.nslots);
-    fprintf(stdout, "%s\n", buffer);
-}
-
-static int16_t entry_parking(vehicle_t *vehicle)
-{
-    int16_t idx = -1;
-
-    switch (vehicle->type) {
-        case CAR:
-            for (uint16_t i = 0; i < MAX_SLOTS && idx < 0; ++i) {
-                if (g_parking.slots[i] >= 0) {
-                    continue;
-                }
-                g_parking.slots[i] = vehicle->id;
-                --g_parking.nslots;
-                idx = i;
-            }
-            break;
-        case TRUCK:
-            for (uint16_t i = 0; i < MAX_SLOTS - 1 && idx < 0; ++i) {
-                if (g_parking.slots[i] >= 0 || g_parking.slots[i + 1] >= 0) {
-                    continue;
-                }
-                g_parking.slots[i] = vehicle->id;
-                g_parking.slots[i + 1] = vehicle->id;
-                --g_parking.nslots;
-                --g_parking.nslots;
-                idx = i;
-            }
-            break;
-        default:
-            break;
-    }
-    return idx;
-}
-
-static void exit_parking(vehicle_t *vehicle)
-{
-    switch (vehicle->type) {
-        case CAR:
-            g_parking.slots[vehicle->slot] = -1;
-            ++g_parking.nslots;
-            break;
-        case TRUCK:
-            g_parking.slots[vehicle->slot] = -1;
-            g_parking.slots[vehicle->slot + 1] = -1;
-            ++g_parking.nslots;
-            ++g_parking.nslots;
-            break;
-        default:
-            break;
-    }
 }
 
 typedef struct parking_args_t {
@@ -118,10 +57,10 @@ void * task(void *arg)
     free(parking_args);
     for (;;) {
 
-        pthread_mutex_lock(&g_parking.mtx);
+        pthread_mutex_lock(&mtx);
         while ((vehicle.slot = entry_parking(&vehicle)) < 0) {
             entry_queue(&vehicle);
-            pthread_cond_wait(&g_parking.cond, &g_parking.mtx);
+            pthread_cond_wait(&cond, &mtx);
             exit_queue(&vehicle);
         }
 
@@ -129,19 +68,19 @@ void * task(void *arg)
             (vehicle.type == TRUCK) ? "camion" : "coche", vehicle.id, vehicle.slot);
 
         print_parking();
-        pthread_mutex_unlock(&g_parking.mtx);
+        pthread_mutex_unlock(&mtx);
 
-        sleep(rand() % 5);
+        sleep(rand() % 10 + 10);
 
-        pthread_mutex_lock(&g_parking.mtx);
+        pthread_mutex_lock(&mtx);
         exit_parking(&vehicle);
 
         fprintf(stdout,"SALIDA: %s: %d plaza : %d\n",
             (vehicle.type == TRUCK) ? "camion" : "coche", vehicle.id, vehicle.slot);
 
         print_parking();
-        pthread_mutex_unlock(&g_parking.mtx);
-        pthread_cond_signal(&g_parking.cond);
+        pthread_mutex_unlock(&mtx);
+        pthread_cond_signal(&cond);
 
         vehicle.slot = -1;
 
@@ -159,16 +98,12 @@ int main(int argc, char **argv)
 #if 0
     pthread_t control_th;
 #endif
-    pthread_mutex_init(&g_parking.mtx, NULL);
-    pthread_cond_init(&g_parking.cond, NULL);
+    pthread_mutex_init(&mtx, NULL);
+    pthread_cond_init(&cond, NULL);
 
     pthread_barrier_init(&barrier, NULL, NUM_VEHICLES);
 
-    for (uint8_t i = 0; i < MAX_SLOTS; ++i) {
-        g_parking.slots[i] = -1;
-    }
-    g_parking.nslots = MAX_SLOTS;
-    print_parking();
+    init_parking();
 
 #if 0
     pthread_create(&control_th, NULL, control, NULL);
