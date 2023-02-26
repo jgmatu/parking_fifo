@@ -1,11 +1,11 @@
 #include <types.h>
 
-void print_fifo();
+void print_queue();
 
-void push_fifo(vehicle_t *vehicle);
+void push_queue(vehicle_t *vehicle);
 
-void del_fifo(const vehicle_t *vehicle);
+void del_queue(const vehicle_t *vehicle);
 
-vehicle_t * pop_fifo();
+vehicle_t * pop_queue();
 
-int16_t is_first_fifo(vehicle_t *vehicle);
+int16_t is_first_queue(vehicle_t *vehicle);

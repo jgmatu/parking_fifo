@@ -23,16 +23,16 @@ void * control(void * arg)
     return NULL;
 }
 
-static void exit_fifo(vehicle_t *vehicle)
+static void exit_queue(vehicle_t *vehicle)
 {
-    del_fifo(vehicle);
-    print_fifo();
+    del_queue(vehicle);
+    print_queue();
 }
 
-static void entry_fifo(vehicle_t *vehicle)
+static void entry_queue(vehicle_t *vehicle)
 {
-    push_fifo(vehicle);
-    print_fifo();
+    push_queue(vehicle);
+    print_queue();
 }
 
 static void print_parking()
@@ -120,9 +120,9 @@ void * task(void *arg)
 
         pthread_mutex_lock(&g_parking.mtx);
         while ((vehicle.slot = entry_parking(&vehicle)) < 0) {
-            entry_fifo(&vehicle);
+            entry_queue(&vehicle);
             pthread_cond_wait(&g_parking.cond, &g_parking.mtx);
-            exit_fifo(&vehicle);
+            exit_queue(&vehicle);
         }
 
         fprintf(stdout,"ENTRADA: %s: %d plaza : %d\n",

@@ -5,28 +5,28 @@
 #include <err.h>
 #include <string.h>
 
-static fifo_control_t g_fifo;
+static queue_control_t g_queue;
 
-void print_fifo()
+void print_queue()
 {
     int16_t nwrite = 0;
     char buffer[1 * 1024] = { 0 };
-    node_t *node = g_fifo.fifo.first;
+    node_t *node = g_queue.queue.first;
 
-    nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%s: (%ld): ", "Queue", g_fifo.fifo.size);
+    nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%s: (%ld): ", "Queue", g_queue.queue.size);
     while (node) {
         nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%d", node->vehicle->id);
         if (node->next)
             nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%s", ",");
         node = node->next;
     }
-    if (g_fifo.fifo.first)
+    if (g_queue.queue.first)
         fprintf(stdout, "%s\n", buffer);
 }
 
-void push_fifo(vehicle_t *vehicle)
+void push_queue(vehicle_t *vehicle)
 {
-    node_t **ptr_node = &g_fifo.fifo.first;
+    node_t **ptr_node = &g_queue.queue.first;
 
     while (*ptr_node) ptr_node = &(*ptr_node)->next;
 
@@ -34,13 +34,13 @@ void push_fifo(vehicle_t *vehicle)
         err(1, "Error allocating node memory %s", strerror(errno));
     }
     (*ptr_node)->vehicle = vehicle;
-    g_fifo.fifo.size++;
+    g_queue.queue.size++;
 }
 
-void del_fifo(const vehicle_t *vehicle)
+void del_queue(const vehicle_t *vehicle)
 {
     node_t *prev = NULL;
-    node_t *del = g_fifo.fifo.first;
+    node_t *del = g_queue.queue.first;
     int delete = 0;
 
     while (del && !delete) {
@@ -56,29 +56,29 @@ void del_fifo(const vehicle_t *vehicle)
         if (prev) {
             prev->next = del->next;
         }
-        if (del == g_fifo.fifo.first) {
-            g_fifo.fifo.first = g_fifo.fifo.first->next;
+        if (del == g_queue.queue.first) {
+            g_queue.queue.first = g_queue.queue.first->next;
         }
-        g_fifo.fifo.size--;
+        g_queue.queue.size--;
         free(del);
     }
 }
 
-vehicle_t * pop_fifo()
+vehicle_t * pop_queue()
 {
-    node_t *del = g_fifo.fifo.first;
+    node_t *del = g_queue.queue.first;
     vehicle_t *vehicle_pop = NULL;
 
-    if (g_fifo.fifo.first) {
-        vehicle_pop = g_fifo.fifo.first->vehicle;
-        g_fifo.fifo.first = g_fifo.fifo.first->next;
-        g_fifo.fifo.size--;
+    if (g_queue.queue.first) {
+        vehicle_pop = g_queue.queue.first->vehicle;
+        g_queue.queue.first = g_queue.queue.first->next;
+        g_queue.queue.size--;
     }
     free(del);
     return vehicle_pop;
 }
 
-int16_t is_first_fifo(vehicle_t *vehicle)
+int16_t is_first_queue(vehicle_t *vehicle)
 {
-    return g_fifo.fifo.first && g_fifo.fifo.first->vehicle->id == vehicle->id;
+    return g_queue.queue.first && g_queue.queue.first->vehicle->id == vehicle->id;
 }

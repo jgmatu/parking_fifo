@@ -31,11 +31,11 @@ typedef struct list_t {
     size_t size;
 } list_t;
 
-typedef struct fifo_control_t {
-    list_t fifo;
+typedef struct queue_control_t {
+    list_t queue;
     pthread_mutex_t mtx;
     pthread_cond_t cond;
-} fifo_control_t;
+} queue_control_t;
 
 typedef struct parking_t {
     int16_t slots[MAX_SLOTS];
