@@ -2,7 +2,7 @@
 CXX := g++
 CC := gcc
 
-CXXFLAGS := -fPIC -Wall -O2 -g #-Wextra 
+CXXFLAGS := -fPIC -Wall -O2 -g # -Wextra 
 CCOBJFLAGS := $(CXXFLAGS) -c
 LIBFLAGS := -pthread
 INCLUDE := -I./include

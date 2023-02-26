@@ -14,10 +14,12 @@ static parking_t g_parking;
 pthread_barrier_t barrier;
 
 // TODO: FIFO Queue control threads
+#if 0
 void * control(void * arg)
 {
     return NULL;
 }
+#endif
 
 static void exit_queue(vehicle_t *vehicle)
 {
@@ -107,9 +109,11 @@ void * task(void *arg)
     vehicle.id = parking_args->id;
     vehicle.type = parking_args->type;
     vehicle.slot = -1;
+#if 0
     pthread_mutex_init(&vehicle.mtx, NULL);
     pthread_cond_init(&vehicle.cond, NULL);
     vehicle.wake_up = 0;
+#endif
 
     free(parking_args);
     for (;;) {
@@ -148,9 +152,13 @@ void * task(void *arg)
 
 int main(int argc, char **argv)
 {
-    pthread_t thread[NUM_VEHICLES];
-    pthread_t control_th;
+    (void) argc;
+    (void) argv;
 
+    pthread_t thread[NUM_VEHICLES];
+#if 0
+    pthread_t control_th;
+#endif
     pthread_mutex_init(&g_parking.mtx, NULL);
     pthread_cond_init(&g_parking.cond, NULL);
 
@@ -162,7 +170,9 @@ int main(int argc, char **argv)
     g_parking.nslots = MAX_SLOTS;
     print_parking();
 
+#if 0
     pthread_create(&control_th, NULL, control, NULL);
+#endif
 
     for (uint8_t i = 0; i < NUM_VEHICLES; ++i) {
         parking_args_t *parking_arg = NULL;
@@ -179,6 +189,8 @@ int main(int argc, char **argv)
     for (uint8_t i = 0; i < NUM_VEHICLES; ++i) {
         pthread_join(thread[i], NULL);
     }
+#if 0
     pthread_join(control_th, NULL);
+#endif
     print_parking();
 }
