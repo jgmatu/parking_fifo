@@ -121,8 +121,6 @@ void * task(void *arg)
         pthread_mutex_lock(&g_parking.mtx);
         while ((vehicle.slot = entry_parking(&vehicle)) < 0) {
             entry_fifo(&vehicle);
-            if (vehicle.type == TRUCK)
-                pthread_cond_signal(&g_parking.cond);
             pthread_cond_wait(&g_parking.cond, &g_parking.mtx);
             exit_fifo(&vehicle);
         }
@@ -133,7 +131,7 @@ void * task(void *arg)
         print_parking();
         pthread_mutex_unlock(&g_parking.mtx);
 
-        sleep(rand() % 30 + 60);
+        sleep(rand() % 10 + 10);
 
         pthread_mutex_lock(&g_parking.mtx);
         exit_parking(&vehicle);
@@ -154,12 +152,12 @@ void * task(void *arg)
 
 int main(int argc, char **argv)
 {
-    pthread_t thread[MAX_TRUCKS + MAX_CARS];
+    pthread_t thread[NUM_VEHICLES];
     pthread_t control_th;
 
     pthread_mutex_init(&g_parking.mtx, NULL);
     pthread_cond_init(&g_parking.cond, NULL);
-    pthread_barrier_init(&barrier, NULL, MAX_TRUCKS + MAX_CARS);
+    pthread_barrier_init(&barrier, NULL, NUM_VEHICLES);
 
     for (uint8_t i = 0; i < MAX_SLOTS; ++i) {
         g_parking.slots[i] = -1;
@@ -169,7 +167,7 @@ int main(int argc, char **argv)
 
     pthread_create(&control_th, NULL, control, NULL);
 
-    for (uint8_t i = 0; i < MAX_TRUCKS + MAX_CARS; ++i) {
+    for (uint8_t i = 0; i < NUM_VEHICLES; ++i) {
         parking_args_t *parking_arg = NULL;
 
         if ((parking_arg = calloc(1, sizeof(parking_args_t))) == NULL) {
@@ -181,7 +179,7 @@ int main(int argc, char **argv)
         pthread_create(&thread[i], NULL, task, parking_arg);
     }
 
-    for (uint8_t i = 0; i < MAX_CARS + MAX_TRUCKS; ++i) {
+    for (uint8_t i = 0; i < NUM_VEHICLES; ++i) {
         pthread_join(thread[i], NULL);
     }
     pthread_join(control_th, NULL);

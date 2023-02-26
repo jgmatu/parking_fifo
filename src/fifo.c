@@ -13,13 +13,13 @@ void print_fifo()
     char buffer[1 * 1024] = { 0 };
     node_t *node = g_fifo.fifo.first;
 
-    nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%s: ", "Queue");
+    nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%s: (%ld): ", "Queue", g_fifo.fifo.size);
     while (node) {
         nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%d,", node->vehicle->id);
         node = node->next;
     }
     if (g_fifo.fifo.first)
-        fprintf(stdout, "%s -> size : %ld\n", buffer, g_fifo.fifo.size);
+        fprintf(stdout, "%s\n", buffer);
 }
 
 void push_fifo(vehicle_t *vehicle)
