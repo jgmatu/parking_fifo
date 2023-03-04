@@ -1,9 +1,16 @@
 #include <types.h>
 
-void print_parking();
+typedef struct parking_control_t {
+    int16_t slots[MAX_SLOTS];
+    uint16_t nslots;
+    pthread_mutex_t mtx;
+    pthread_cond_t cond;
+} parking_control_t;
 
-void init_parking();
+void print_parking(parking_control_t *parking);
 
-int16_t entry_parking(vehicle_t *vehicle);
+void init_parking(parking_control_t *parking);
 
-void exit_parking(vehicle_t *vehicle);
+int16_t entry_parking(parking_control_t *parking, vehicle_t *vehicle);
+
+void exit_parking(parking_control_t *parking, vehicle_t *vehicle);

@@ -1,11 +1,36 @@
 #include <types.h>
 
-void print_queue();
+typedef struct node_t {
+    vehicle_t *vehicle;
+    struct node_t *next;
+} node_t;
 
-void push_queue(vehicle_t *vehicle);
+typedef struct list_t {
+    struct node_t *first;
+    type_t type;
+    size_t size;
+} list_t;
 
-void del_queue(const vehicle_t *vehicle);
+typedef struct queue_control_t {
+    list_t queue;
+    pthread_mutex_t mtx;
+    pthread_cond_t cond;
+} queue_control_t;
 
-vehicle_t * pop_queue();
+void init_queue(queue_control_t *queue, type_t type);
 
-int16_t is_first_queue(vehicle_t *vehicle);
+void print_queue(const queue_control_t *queue);
+
+int16_t is_first_queue(const queue_control_t *queue, vehicle_t *vehicle);
+
+void push_queue(queue_control_t *queue, vehicle_t *vehicle);
+
+void del_queue(queue_control_t *queue, const vehicle_t *vehicle);
+
+vehicle_t * pop_queue(queue_control_t *queue);
+
+void exit_queue(queue_control_t *queue, vehicle_t *vehicle);
+
+void entry_queue(queue_control_t *queue, vehicle_t *vehicle);
+
+void notify_queue(queue_control_t *queue);

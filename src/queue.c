@@ -5,28 +5,61 @@
 #include <err.h>
 #include <string.h>
 
-static queue_control_t g_queue;
+#include <queue.h>
 
-void print_queue()
+static int search_queue(queue_control_t *queue, vehicle_t *vehicle)
 {
-    int16_t nwrite = 0;
-    char buffer[1 * 1024] = { 0 };
-    node_t *node = g_queue.queue.first;
+    node_t *node = queue->queue.first;
+    int idx = -1;
+    uint16_t pos = 0;
 
-    nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%s: (%ld): ", "Queue", g_queue.queue.size);
     while (node) {
-        nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%d", node->vehicle->id);
-        if (node->next)
-            nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%s", ",");
+        if (node->vehicle->id == vehicle->id) {
+            idx = pos;
+            break;
+        }
+        pos = pos + 1;
         node = node->next;
     }
-    if (g_queue.queue.first)
-        fprintf(stdout, "%s\n", buffer);
+    return idx;
 }
 
-void push_queue(vehicle_t *vehicle)
+
+void init_queue(queue_control_t *queue, type_t type)
 {
-    node_t **ptr_node = &g_queue.queue.first;
+    queue->queue.first = NULL;
+    queue->queue.size = 0;
+    queue->queue.type = type;
+    pthread_mutex_init(&queue->mtx, NULL);
+    pthread_cond_init(&queue->cond, NULL);
+}
+
+void exit_queue(queue_control_t *queue, vehicle_t *vehicle)
+{
+    pthread_mutex_lock(&queue->mtx);
+
+    del_queue(queue, vehicle);
+    print_queue(queue);
+
+    pthread_mutex_unlock(&queue->mtx);
+    pthread_cond_signal(&queue->cond);
+}
+
+void entry_queue(queue_control_t *queue, vehicle_t *vehicle)
+{      
+    pthread_mutex_lock(&queue->mtx);
+    if (search_queue(queue, vehicle) < 0) {
+        push_queue(queue, vehicle);
+    }
+    print_queue(queue);
+    pthread_cond_wait(&queue->cond, &queue->mtx);
+
+    pthread_mutex_unlock(&queue->mtx);
+}
+
+void push_queue(queue_control_t *queue, vehicle_t *vehicle)
+{
+    node_t **ptr_node = &queue->queue.first;
 
     while (*ptr_node) ptr_node = &(*ptr_node)->next;
 
@@ -34,13 +67,13 @@ void push_queue(vehicle_t *vehicle)
         err(1, "Error allocating node memory %s", strerror(errno));
     }
     (*ptr_node)->vehicle = vehicle;
-    g_queue.queue.size++;
+    queue->queue.size++;
 }
 
-void del_queue(const vehicle_t *vehicle)
+void del_queue(queue_control_t *queue, const vehicle_t *vehicle)
 {
     node_t *prev = NULL;
-    node_t *del = g_queue.queue.first;
+    node_t *del = queue->queue.first;
     int delete = 0;
 
     while (del && !delete) {
@@ -56,29 +89,52 @@ void del_queue(const vehicle_t *vehicle)
         if (prev) {
             prev->next = del->next;
         }
-        if (del == g_queue.queue.first) {
-            g_queue.queue.first = g_queue.queue.first->next;
+        if (del == queue->queue.first) {
+            queue->queue.first = queue->queue.first->next;
         }
-        g_queue.queue.size--;
+        queue->queue.size--;
         free(del);
     }
 }
 
-vehicle_t * pop_queue()
+vehicle_t * pop_queue(queue_control_t *queue)
 {
-    node_t *del = g_queue.queue.first;
+    node_t *del = queue->queue.first;
     vehicle_t *vehicle_pop = NULL;
 
-    if (g_queue.queue.first) {
-        vehicle_pop = g_queue.queue.first->vehicle;
-        g_queue.queue.first = g_queue.queue.first->next;
-        g_queue.queue.size--;
+    if (queue->queue.first) {
+        vehicle_pop = queue->queue.first->vehicle;
+        queue->queue.first = queue->queue.first->next;
+        queue->queue.size--;
     }
     free(del);
     return vehicle_pop;
 }
 
-int16_t is_first_queue(vehicle_t *vehicle)
+int16_t is_first_queue(const queue_control_t *queue, vehicle_t *vehicle)
 {
-    return g_queue.queue.first && g_queue.queue.first->vehicle->id == vehicle->id;
+    return queue->queue.first && queue->queue.first->vehicle->id == vehicle->id;
+}
+
+void notify_queue(queue_control_t *queue)
+{
+    pthread_cond_signal(&queue->cond);
+}
+
+void print_queue(const queue_control_t *queue)
+{
+    int16_t nwrite = 0;
+    char buffer[1 * 1024] = { 0 };
+    node_t *node = queue->queue.first;
+
+    nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "Queue %s: (%ld): ",
+        (queue->queue.type == TRUCK) ? "Trucks" : "Cars" , queue->queue.size);
+    while (node) {
+        nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%d", node->vehicle->id);
+        if (node->next)
+            nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%s", ",");
+        node = node->next;
+    }
+    if (queue->queue.first)
+        fprintf(stdout, "%s\n", buffer);
 }
