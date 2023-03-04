@@ -85,22 +85,20 @@ void * task(void *arg)
  
         fprintf(stdout,"ENTRADA: %s: %d plaza : %d\n",
             (vehicle.type == TRUCK) ? "camion" : "coche", vehicle.id, vehicle.slot);
-
         print_parking(&g_parking);
 
         sleep(rand() % 10 + 10);
 
         exit_parking(&g_parking, &vehicle);
-        pthread_cond_signal(&g_parking.cond);
 
         fprintf(stdout,"SALIDA: %s: %d plaza : %d\n",
             (vehicle.type == TRUCK) ? "camion" : "coche", vehicle.id, vehicle.slot);
-
         print_parking(&g_parking);
 
-        vehicle.slot = -1;
-
+        pthread_cond_signal(&g_parking.cond);
         pthread_barrier_wait(&barrier);
+
+        vehicle.slot = -1;
     }
     return NULL;
 }
