@@ -21,8 +21,6 @@ void init_queue(queue_control_t *queue, type_t type);
 
 void print_queue(const queue_control_t *queue);
 
-int16_t is_first_queue(const queue_control_t *queue, vehicle_t *vehicle);
-
 void push_queue(queue_control_t *queue, vehicle_t *vehicle);
 
 void del_queue(queue_control_t *queue, const vehicle_t *vehicle);

@@ -45,7 +45,6 @@ int16_t entry_parking(parking_control_t *parking, vehicle_t *vehicle)
             for (uint16_t i = 0; i < MAX_SLOTS && idx < 0; ++i) {
                 if ((idx = isEmptyTruckSlot(parking, i)) < 0) continue;
 
-                fprintf(stdout, "Parking slot %d\n", idx);
                 for (uint16_t j = 0; j < TRUCK_SIZE; ++j) {
                     parking->slots[idx + j] = vehicle->id;
                 }
@@ -64,7 +63,6 @@ int16_t entry_parking(parking_control_t *parking, vehicle_t *vehicle)
 void exit_parking(parking_control_t *parking, vehicle_t *vehicle)
 {
     pthread_mutex_lock(&parking->mtx);
-
     switch (vehicle->type) {
         case CAR:
             parking->slots[vehicle->slot] = -1;

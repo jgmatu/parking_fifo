@@ -24,7 +24,7 @@ void * control_task(void * arg)
     for (;;) {
         pthread_cond_wait(&g_parking.cond, &g_parking.mtx);
 
-        if (g_parking.nslots >= TRUCK_SIZE) {
+        if (g_parking.nslots >= TRUCK_SIZE && !g_parking.truck_fail) {
             pthread_mutex_lock(&g_queue_trucks.mtx);
             if (g_queue_trucks.queue.size == 0) {
                 notify_queue(&g_queue_cars);
@@ -34,7 +34,7 @@ void * control_task(void * arg)
         } else {
             notify_queue(&g_queue_cars);
         }
-
+        g_parking.truck_fail = 0;
     }
     return NULL;
 }
@@ -65,6 +65,12 @@ void * task(void *arg)
             switch (vehicle.type)
             {
             case TRUCK:
+                pthread_mutex_lock(&g_parking.mtx);
+                if (g_parking.nslots >= TRUCK_SIZE) {
+                    g_parking.truck_fail = 1;
+                }
+                pthread_mutex_unlock(&g_parking.mtx);
+                pthread_cond_signal(&g_parking.cond);
                 entry_queue(&g_queue_trucks, &vehicle);
                 break;
             case CAR:
@@ -109,7 +115,7 @@ int main(int argc, char **argv)
     (void) argv;
 
     pthread_t thread[NUM_VEHICLES];
-    pthread_t control_th;
+    pthread_t control;
 
     pthread_barrier_init(&barrier, NULL, NUM_VEHICLES);
 
@@ -117,7 +123,7 @@ int main(int argc, char **argv)
     init_queue(&g_queue_cars, CAR);
     init_queue(&g_queue_trucks, TRUCK);
 
-    pthread_create(&control_th, NULL, control_task, NULL);
+    pthread_create(&control, NULL, control_task, NULL);
 
     for (uint8_t i = 0; i < NUM_VEHICLES; ++i) {
         parking_args_t *parking_arg = NULL;
@@ -134,7 +140,7 @@ int main(int argc, char **argv)
     for (uint8_t i = 0; i < NUM_VEHICLES; ++i) {
         pthread_join(thread[i], NULL);
     }
-    pthread_join(control_th, NULL);
+    pthread_join(control, NULL);
 
     print_parking(&g_parking);
     return 0;

@@ -111,11 +111,6 @@ vehicle_t * pop_queue(queue_control_t *queue)
     return vehicle_pop;
 }
 
-int16_t is_first_queue(const queue_control_t *queue, vehicle_t *vehicle)
-{
-    return queue->queue.first && queue->queue.first->vehicle->id == vehicle->id;
-}
-
 void notify_queue(queue_control_t *queue)
 {
     pthread_cond_signal(&queue->cond);
