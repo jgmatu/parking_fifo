@@ -27,8 +27,7 @@ void del_queue(queue_control_t *queue, const vehicle_t *vehicle);
 
 vehicle_t * pop_queue(queue_control_t *queue);
 
-void exit_queue(queue_control_t *queue, vehicle_t *vehicle);
-
-void entry_queue(queue_control_t *queue, vehicle_t *vehicle);
+void exit_wait_queue(queue_control_t *queue, vehicle_t *vehicle);
+void entry_wait_queue(queue_control_t *queue, vehicle_t *vehicle);
 
 void notify_queue(queue_control_t *queue);

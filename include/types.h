@@ -4,9 +4,9 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define MAX_SLOTS 20
+#define MAX_SLOTS 30
 #define NUM_VEHICLES 20
-#define TRUCK_SIZE 19
+#define TRUCK_SIZE 2
 
 typedef enum  {
     CAR = 0,

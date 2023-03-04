@@ -71,10 +71,10 @@ void * task(void *arg)
                 }
                 pthread_mutex_unlock(&g_parking.mtx);
                 pthread_cond_signal(&g_parking.cond);
-                entry_queue(&g_queue_trucks, &vehicle);
+                entry_wait_queue(&g_queue_trucks, &vehicle);
                 break;
             case CAR:
-                entry_queue(&g_queue_cars, &vehicle);
+                entry_wait_queue(&g_queue_cars, &vehicle);
                 break;
             }
         }
@@ -82,24 +82,15 @@ void * task(void *arg)
         switch (vehicle.type)
         {
         case TRUCK:
-            exit_queue(&g_queue_trucks, &vehicle);
+            exit_wait_queue(&g_queue_trucks, &vehicle);
             break;
         case CAR:
-            exit_queue(&g_queue_cars, &vehicle);
+            exit_wait_queue(&g_queue_cars, &vehicle);
            break;
         }
  
-        fprintf(stdout,"ENTRADA: %s: %d plaza : %d\n",
-            (vehicle.type == TRUCK) ? "camion" : "coche", vehicle.id, vehicle.slot);
-        print_parking(&g_parking);
-
         sleep(rand() % 10 + 10);
-
         exit_parking(&g_parking, &vehicle);
-
-        fprintf(stdout,"SALIDA: %s: %d plaza : %d\n",
-            (vehicle.type == TRUCK) ? "camion" : "coche", vehicle.id, vehicle.slot);
-        print_parking(&g_parking);
 
         pthread_cond_signal(&g_parking.cond);
         pthread_barrier_wait(&barrier);
@@ -114,7 +105,7 @@ int main(int argc, char **argv)
     (void) argc;
     (void) argv;
 
-    pthread_t thread[NUM_VEHICLES];
+    pthread_t threads[NUM_VEHICLES];
     pthread_t control;
 
     pthread_barrier_init(&barrier, NULL, NUM_VEHICLES);
@@ -134,14 +125,12 @@ int main(int argc, char **argv)
 
         parking_arg->id = i;
         parking_arg->type = (i % 2 == 0) ? TRUCK : CAR;
-        pthread_create(&thread[i], NULL, task, parking_arg);
+        pthread_create(&threads[i], NULL, task, parking_arg);
     }
 
     for (uint8_t i = 0; i < NUM_VEHICLES; ++i) {
-        pthread_join(thread[i], NULL);
+        pthread_join(threads[i], NULL);
     }
     pthread_join(control, NULL);
-
-    print_parking(&g_parking);
     return 0;
 }

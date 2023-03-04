@@ -34,7 +34,7 @@ void init_queue(queue_control_t *queue, type_t type)
     pthread_cond_init(&queue->cond, NULL);
 }
 
-void exit_queue(queue_control_t *queue, vehicle_t *vehicle)
+void exit_wait_queue(queue_control_t *queue, vehicle_t *vehicle)
 {
     pthread_mutex_lock(&queue->mtx);
 
@@ -45,7 +45,7 @@ void exit_queue(queue_control_t *queue, vehicle_t *vehicle)
     pthread_cond_signal(&queue->cond);
 }
 
-void entry_queue(queue_control_t *queue, vehicle_t *vehicle)
+void entry_wait_queue(queue_control_t *queue, vehicle_t *vehicle)
 {      
     pthread_mutex_lock(&queue->mtx);
     if (search_queue(queue, vehicle) < 0) {

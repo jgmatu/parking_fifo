@@ -2,14 +2,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void init_parking(parking_control_t *parking)
+
+static inline void print_parking(parking_control_t *parking)
 {
-    for (uint8_t i = 0; i < MAX_SLOTS; ++i) {
-        parking->slots[i] = -1;
+    char buffer[1 * 1024] = { 0 };
+    int16_t nwrite = 0;
+
+    for (uint16_t i = 0; i < MAX_SLOTS; ++i) {
+        nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "[%d]", parking->slots[i]);
     }
-    parking->nslots = MAX_SLOTS;
-    pthread_mutex_init(&parking->mtx, NULL);
-    pthread_cond_init(&parking->cond, NULL);
+    nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, " - > free slots: %d", parking->nslots);
+
+    fprintf(stdout, "%s\n", buffer);
 }
 
 static inline int16_t isEmptyTruckSlot(const parking_control_t *parking, uint16_t slot)
@@ -23,6 +27,16 @@ static inline int16_t isEmptyTruckSlot(const parking_control_t *parking, uint16_
         ++total;
     }
     return total == TRUCK_SIZE ? slot : -1;
+}
+
+void init_parking(parking_control_t *parking)
+{
+    for (uint8_t i = 0; i < MAX_SLOTS; ++i) {
+        parking->slots[i] = -1;
+    }
+    parking->nslots = MAX_SLOTS;
+    pthread_mutex_init(&parking->mtx, NULL);
+    pthread_cond_init(&parking->cond, NULL);
 }
 
 int16_t entry_parking(parking_control_t *parking, vehicle_t *vehicle)
@@ -54,6 +68,11 @@ int16_t entry_parking(parking_control_t *parking, vehicle_t *vehicle)
         default:
             break;
     }
+    if (idx >= 0) {
+        fprintf(stdout,"ENTRADA: %s: %d plaza : %d\n",
+            (vehicle->type == TRUCK) ? "camion" : "coche", vehicle->id, vehicle->slot);
+        print_parking(parking);
+    }
     pthread_mutex_unlock(&parking->mtx);
 
     vehicle->slot = idx;
@@ -77,22 +96,8 @@ void exit_parking(parking_control_t *parking, vehicle_t *vehicle)
         default:
             break;
     }
+    fprintf(stdout,"SALIDA: %s: %d plaza : %d\n",
+        (vehicle->type == TRUCK) ? "camion" : "coche", vehicle->id, vehicle->slot);
+    print_parking(parking);
     pthread_mutex_unlock(&parking->mtx);
 }
-
-void print_parking(parking_control_t *parking)
-{
-    char buffer[1 * 1024] = { 0 };
-    int16_t nwrite = 0;
-
-    pthread_mutex_lock(&parking->mtx);
-    for (uint16_t i = 0; i < MAX_SLOTS; ++i) {
-        nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "[%d]", parking->slots[i]);
-    }
-    nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, " - > free slots: %d", parking->nslots);
-    pthread_mutex_unlock(&parking->mtx);
-
-    fprintf(stdout, "%s\n", buffer);
-}
-
-
