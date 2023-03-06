@@ -24,7 +24,6 @@ static int search_queue(queue_control_t *queue, vehicle_t *vehicle)
     return idx;
 }
 
-
 void init_queue(queue_control_t *queue, type_t type)
 {
     queue->queue.first = NULL;
@@ -113,7 +112,12 @@ vehicle_t * pop_queue(queue_control_t *queue)
 
 void notify_queue(queue_control_t *queue)
 {
-    pthread_cond_signal(&queue->cond);
+    pthread_mutex_lock(&queue->mtx);
+    if (queue->queue.size > 0) {
+        pthread_mutex_unlock(&queue->mtx);
+        pthread_cond_signal(&queue->cond);
+    }
+    pthread_mutex_unlock(&queue->mtx);
 }
 
 void print_queue(const queue_control_t *queue)
@@ -130,6 +134,7 @@ void print_queue(const queue_control_t *queue)
             nwrite += snprintf(&buffer[nwrite], 1 * 1024 - nwrite, "%s", ",");
         node = node->next;
     }
-    if (queue->queue.first)
-        fprintf(stdout, "%s\n", buffer);
+    if (!queue->queue.first)
+        snprintf(buffer, 1 * 1024, "Queue %s: (Empty)", (queue->queue.type == TRUCK) ? "Trucks" : "Cars");
+    fprintf(stdout, "%s\n", buffer);
 }

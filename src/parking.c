@@ -68,14 +68,14 @@ int16_t entry_parking(parking_control_t *parking, vehicle_t *vehicle)
         default:
             break;
     }
+    vehicle->slot = idx;
+
     if (idx >= 0) {
         fprintf(stdout,"ENTRADA: %s: %d plaza : %d\n",
             (vehicle->type == TRUCK) ? "camion" : "coche", vehicle->id, vehicle->slot);
         print_parking(parking);
     }
     pthread_mutex_unlock(&parking->mtx);
-
-    vehicle->slot = idx;
     return idx;
 }
 

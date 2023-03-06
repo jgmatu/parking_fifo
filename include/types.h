@@ -4,7 +4,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define MAX_SLOTS 30
+#define MAX_SLOTS 29
 #define NUM_VEHICLES 20
 #define TRUCK_SIZE 2
 
