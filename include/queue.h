@@ -1,7 +1,7 @@
 #include <types.h>
 
 typedef struct node_t {
-    vehicle_t *vehicle;
+    vehicle_control_t *vehicle;
     struct node_t *next;
 } node_t;
 
@@ -21,13 +21,13 @@ void init_queue(queue_control_t *queue, type_t type);
 
 void print_queue(const queue_control_t *queue);
 
-void push_queue(queue_control_t *queue, vehicle_t *vehicle);
+void push_queue(queue_control_t *queue, vehicle_control_t *vehicle);
 
-void del_queue(queue_control_t *queue, const vehicle_t *vehicle);
+void del_queue(queue_control_t *queue, const vehicle_control_t *vehicle);
 
-vehicle_t * pop_queue(queue_control_t *queue);
+vehicle_control_t * pop_queue(queue_control_t *queue);
 
-void exit_wait_queue(queue_control_t *queue, vehicle_t *vehicle);
-void entry_wait_queue(queue_control_t *queue, vehicle_t *vehicle);
+void exit_wait_queue(queue_control_t *queue, vehicle_control_t *vehicle);
+void entry_wait_queue(queue_control_t *queue, vehicle_control_t *vehicle);
 
 void notify_queue(queue_control_t *queue);

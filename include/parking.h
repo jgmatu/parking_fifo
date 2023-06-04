@@ -10,6 +10,6 @@ typedef struct parking_control_t {
 
 void init_parking(parking_control_t *parking);
 
-int16_t entry_parking(parking_control_t *parking, vehicle_t *vehicle);
+int16_t entry_parking(parking_control_t *parking, vehicle_control_t *vehicle);
 
-void exit_parking(parking_control_t *parking, vehicle_t *vehicle);
+void exit_parking(parking_control_t *parking, vehicle_control_t *vehicle);

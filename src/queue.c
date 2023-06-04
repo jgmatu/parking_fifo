@@ -7,7 +7,7 @@
 
 #include <queue.h>
 
-static int search_queue(queue_control_t *queue, vehicle_t *vehicle)
+static int search_queue(queue_control_t *queue, vehicle_control_t *vehicle)
 {
     node_t *node = queue->queue.first;
     int idx = -1;
@@ -33,7 +33,7 @@ void init_queue(queue_control_t *queue, type_t type)
     pthread_cond_init(&queue->cond, NULL);
 }
 
-void exit_wait_queue(queue_control_t *queue, vehicle_t *vehicle)
+void exit_wait_queue(queue_control_t *queue, vehicle_control_t *vehicle)
 {
     pthread_mutex_lock(&queue->mtx);
 
@@ -44,19 +44,27 @@ void exit_wait_queue(queue_control_t *queue, vehicle_t *vehicle)
     pthread_cond_signal(&queue->cond);
 }
 
-void entry_wait_queue(queue_control_t *queue, vehicle_t *vehicle)
-{      
+void entry_wait_queue(queue_control_t *queue, vehicle_control_t *vehicle)
+{
     pthread_mutex_lock(&queue->mtx);
     if (search_queue(queue, vehicle) < 0) {
         push_queue(queue, vehicle);
     }
     print_queue(queue);
-    pthread_cond_wait(&queue->cond, &queue->mtx);
+#if 0
+    pthread_mutex_lock(&vehicle->mtx);
+    vehicle->wake_up = 0;
+    while(vehicle->wake_up == 0) {
+        pthread_cond_wait(&vehicle->cond, &vehicle->mtx);
+    }
+    pthread_mutex_unlock(&vehicle->mtx);
+#endif
 
+    pthread_cond_wait(&queue->cond, &queue->mtx);
     pthread_mutex_unlock(&queue->mtx);
 }
 
-void push_queue(queue_control_t *queue, vehicle_t *vehicle)
+void push_queue(queue_control_t *queue, vehicle_control_t *vehicle)
 {
     node_t **ptr_node = &queue->queue.first;
 
@@ -69,7 +77,7 @@ void push_queue(queue_control_t *queue, vehicle_t *vehicle)
     queue->queue.size++;
 }
 
-void del_queue(queue_control_t *queue, const vehicle_t *vehicle)
+void del_queue(queue_control_t *queue, const vehicle_control_t *vehicle)
 {
     node_t *prev = NULL;
     node_t *del = queue->queue.first;
@@ -96,10 +104,10 @@ void del_queue(queue_control_t *queue, const vehicle_t *vehicle)
     }
 }
 
-vehicle_t * pop_queue(queue_control_t *queue)
+vehicle_control_t * pop_queue(queue_control_t *queue)
 {
     node_t *del = queue->queue.first;
-    vehicle_t *vehicle_pop = NULL;
+    vehicle_control_t *vehicle_pop = NULL;
 
     if (queue->queue.first) {
         vehicle_pop = queue->queue.first->vehicle;
@@ -112,12 +120,27 @@ vehicle_t * pop_queue(queue_control_t *queue)
 
 void notify_queue(queue_control_t *queue)
 {
+#if 0
+    vehicle_control_t *vehicle = NULL;
+
+    pthread_mutex_lock(&queue->mtx);
+    if ((vehicle = pop_queue(queue)) != NULL) {
+        pthread_mutex_lock(&vehicle->mtx);
+        vehicle->wake_up = 1;
+        pthread_mutex_unlock(&vehicle->mtx);
+        pthread_cond_signal(&vehicle->cond);
+    } else {
+        pthread_mutex_unlock(&queue->mtx);
+    }
+#else
     pthread_mutex_lock(&queue->mtx);
     if (queue->queue.size > 0) {
         pthread_mutex_unlock(&queue->mtx);
         pthread_cond_signal(&queue->cond);
+    } else {
+        pthread_mutex_unlock(&queue->mtx);
     }
-    pthread_mutex_unlock(&queue->mtx);
+#endif
 }
 
 void print_queue(const queue_control_t *queue)

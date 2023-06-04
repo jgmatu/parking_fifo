@@ -47,7 +47,7 @@ typedef struct parking_args_t {
 void * task(void *arg)
 {
     parking_args_t *parking_args = (parking_args_t *) arg;
-    vehicle_t vehicle;
+    vehicle_control_t vehicle;
 
     vehicle.id = parking_args->id;
     vehicle.type = parking_args->type;
@@ -78,7 +78,9 @@ void * task(void *arg)
                 break;
             }
         }
-
+#if 0
+        ;
+#else
         switch (vehicle.type)
         {
         case TRUCK:
@@ -88,7 +90,7 @@ void * task(void *arg)
             exit_wait_queue(&g_queue_cars, &vehicle);
            break;
         }
- 
+#endif
         sleep(rand() % 10 + 10);
         exit_parking(&g_parking, &vehicle);
 

@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 static inline void print_parking(parking_control_t *parking)
 {
     char buffer[1 * 1024] = { 0 };
@@ -39,7 +38,7 @@ void init_parking(parking_control_t *parking)
     pthread_cond_init(&parking->cond, NULL);
 }
 
-int16_t entry_parking(parking_control_t *parking, vehicle_t *vehicle)
+int16_t entry_parking(parking_control_t *parking, vehicle_control_t *vehicle)
 {
     int16_t idx = -1;
 
@@ -79,7 +78,7 @@ int16_t entry_parking(parking_control_t *parking, vehicle_t *vehicle)
     return idx;
 }
 
-void exit_parking(parking_control_t *parking, vehicle_t *vehicle)
+void exit_parking(parking_control_t *parking, vehicle_control_t *vehicle)
 {
     pthread_mutex_lock(&parking->mtx);
     switch (vehicle->type) {
