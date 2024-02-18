@@ -21,17 +21,22 @@ void * control_task(void * arg)
 {
     pthread_mutex_lock(&g_parking.mtx);
 
-    for (;;) {
+    for (;;)
+    {
         pthread_cond_wait(&g_parking.cond, &g_parking.mtx);
 
-        if (g_parking.nslots >= TRUCK_SIZE && !g_parking.truck_fail) {
+        if (g_parking.row[0].nslots >= TRUCK_SIZE && !g_parking.truck_fail)
+        {
             pthread_mutex_lock(&g_queue_trucks.mtx);
-            if (g_queue_trucks.queue.size == 0) {
+            if (g_queue_trucks.queue.size == 0)
+            {
                 notify_queue(&g_queue_cars);
             }
             pthread_mutex_unlock(&g_queue_trucks.mtx);
             notify_queue(&g_queue_trucks);
-        } else {
+        }
+        else
+        {
             notify_queue(&g_queue_cars);
         }
         g_parking.truck_fail = 0;
@@ -59,14 +64,16 @@ void * task(void *arg)
 #endif
     free(parking_args);
 
-    for (;;) {
-
-        while ((vehicle.slot = entry_parking(&g_parking, &vehicle)) < 0) {
+    for (;;)
+    {
+        while ((vehicle.slot = entry_parking(&g_parking, &vehicle)) < 0)
+        {
             switch (vehicle.type)
             {
             case TRUCK:
                 pthread_mutex_lock(&g_parking.mtx);
-                if (g_parking.nslots >= TRUCK_SIZE) {
+                if (g_parking.row[0].nslots >= TRUCK_SIZE)
+                {
                     g_parking.truck_fail = 1;
                 }
                 pthread_mutex_unlock(&g_parking.mtx);
@@ -78,9 +85,7 @@ void * task(void *arg)
                 break;
             }
         }
-#if 0
-        ;
-#else
+
         switch (vehicle.type)
         {
         case TRUCK:
@@ -90,8 +95,8 @@ void * task(void *arg)
             exit_wait_queue(&g_queue_cars, &vehicle);
            break;
         }
-#endif
-        sleep(rand() % 10 + 10);
+
+        sleep(rand() % 1 + 5);
         exit_parking(&g_parking, &vehicle);
 
         pthread_cond_signal(&g_parking.cond);
@@ -118,19 +123,21 @@ int main(int argc, char **argv)
 
     pthread_create(&control, NULL, control_task, NULL);
 
-    for (uint8_t i = 0; i < NUM_VEHICLES; ++i) {
+    for (uint8_t i = 0; i < NUM_VEHICLES; ++i)
+    {
         parking_args_t *parking_arg = NULL;
 
-        if ((parking_arg = calloc(1, sizeof(parking_args_t))) == NULL) {
+        if ((parking_arg = calloc(1, sizeof(parking_args_t))) == NULL)
+        {
             err(1, "Error allocating argument memory! %s", strerror(errno));
         }
-
         parking_arg->id = i;
         parking_arg->type = (i % 2 == 0) ? TRUCK : CAR;
         pthread_create(&threads[i], NULL, task, parking_arg);
     }
 
-    for (uint8_t i = 0; i < NUM_VEHICLES; ++i) {
+    for (uint8_t i = 0; i < NUM_VEHICLES; ++i)
+    {
         pthread_join(threads[i], NULL);
     }
     pthread_join(control, NULL);
